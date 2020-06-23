@@ -5,6 +5,8 @@ use MonkeyLearn\Client as MonkeyLearn;
 
 require 'vendor/autoload.php';
 
+$db = new PDO('mysql:host=localhost;dbname=twitter-bot','root', 'root');
+
 $ml = new MonkeyLearn('a71aa30c686c6087637cb288b13e8b06a018ffd0');
 
 Codebird::setConsumerKey('PbXmtfcKHEckEPnvzlvGYrMQF', 'HrBsf5zvCKwYiPxnQXNqm8lVKUxUycG1Qy6zPLYTnXWTJWDdqA');
@@ -14,7 +16,10 @@ $cb->setReturnFormat(CODEBIRD_RETURNFORMAT_ARRAY);
 
 $cb->setToken('4778628941-egXbYAeaed6JciTw6Xd4bQx3stSRU2euDXo5Fsi', 'w4mzvZi7AlevQ588oELOIuDPwJ1UobLK3KJxo2170Csc7');
 
-$mentions = $cb->statuses_mentionsTimeline();
+$lastId = $db->query("SELECT * FROM tracking ORDER BY twitter_id DESC LIMIT 1")
+    ->fetch(PDO::FETCH_OBJ);
+
+$mentions = $cb->statuses_mentionsTimeline($lastId ? 'since_id=' . $lastId->twitter_id : '');
 
 if ( ! isset($mentions[0])) {
     return;
@@ -54,16 +59,19 @@ $analysis   = $ml->classifiers->classify('cl_pi3C7JiL', $tweetsText, true);
 
 foreach($tweets as $index => $tweet)
 {
-   switch (strtolower($analysis->result[$index][0]['label'])) {
+    switch (strtolower($analysis->result[$index][0]['label'])) {
        case 'positive':
            $emojiSet = $happyEmojis;
            break;
-       case 'neutral':
-           $emojiSet = $neutralEmojis;
-           break;
-       case'negative':
-           $emojiSet = $sadEmojis;
-           break;
-   }
-   var_dump($emojiSet);
+        case 'neutral':
+            $emojiSet = $neutralEmojis;
+            break;
+        case'negative':
+            $emojiSet = $sadEmojis;
+            break;
+    }
+    $track = $db->prepare("INSERT INTO tracking (twitter_id) VALUES (:twitterId)");
+    $track->execute([
+        'twitterId' => $tweet['id']
+    ]);
 }

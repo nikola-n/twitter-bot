@@ -1,6 +1,7 @@
 {
     "require": {
         "jublonet/codebird-php": "^3.1",
-        "monkeylearn/monkeylearn-php": "^3.3"
+        "monkeylearn/monkeylearn-php": "^3.3",
+      "ext-pdo": "*"
     }
 }
