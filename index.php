@@ -57,8 +57,6 @@ $tweetsText = array_map(function ($tweet) {
 
 $analysis = $ml->classifiers->classify('cl_pi3C7JiL', $tweetsText, true);
 
-
-var_dump($analysis);
 foreach ($tweets as $index => $tweet) {
     switch (strtolower($analysis->result[$index][0]['label'])) {
         case 'positive':
