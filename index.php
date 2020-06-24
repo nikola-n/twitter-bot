@@ -5,7 +5,7 @@ use MonkeyLearn\Client as MonkeyLearn;
 
 require 'vendor/autoload.php';
 
-$db = new PDO('mysql:host=localhost;dbname=twitter-bot','root', 'root');
+$db = new PDO('mysql:host=localhost;dbname=twitter-bot', 'root', 'root');
 
 $ml = new MonkeyLearn('a71aa30c686c6087637cb288b13e8b06a018ffd0');
 
@@ -26,13 +26,13 @@ if ( ! isset($mentions[0])) {
 }
 
 $happyEmojis = [
-  '&#x1F601',
-  '&#x1F602',
+    '&#x1F601',
+    '&#x1F602',
 ];
 
 $neutralEmojis = [
     '&#x1F610',
-    '&#x1F611'
+    '&#x1F611',
 ];
 
 $sadEmojis = [
@@ -55,14 +55,15 @@ $tweetsText = array_map(function ($tweet) {
     return $tweet['text'];
 }, $tweets);
 
-$analysis   = $ml->classifiers->classify('cl_pi3C7JiL', $tweetsText, true);
+$analysis = $ml->classifiers->classify('cl_pi3C7JiL', $tweetsText, true);
 
-foreach($tweets as $index => $tweet)
-{
+
+var_dump($analysis);
+foreach ($tweets as $index => $tweet) {
     switch (strtolower($analysis->result[$index][0]['label'])) {
-       case 'positive':
-           $emojiSet = $happyEmojis;
-           break;
+        case 'positive':
+            $emojiSet = $happyEmojis;
+            break;
         case 'neutral':
             $emojiSet = $neutralEmojis;
             break;
@@ -70,8 +71,13 @@ foreach($tweets as $index => $tweet)
             $emojiSet = $sadEmojis;
             break;
     }
+    $cb->statuses_update([
+        'status'                => '@' . $tweet['user_screen_name'] . ' ' . html_entity_decode($emojiSet[rand(0, count($emojiSet) - 1)], 0, 'UTF-8'),
+        'in_reply_to_status_id' => $tweet['id'],
+    ]);
+
     $track = $db->prepare("INSERT INTO tracking (twitter_id) VALUES (:twitterId)");
     $track->execute([
-        'twitterId' => $tweet['id']
+        'twitterId' => $tweet['id'],
     ]);
 }
